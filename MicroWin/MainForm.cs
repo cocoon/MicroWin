@@ -218,7 +218,7 @@ namespace MicroWin
                 ChangePage(CurrentWizardPage.wizardPage + 1);
             }
         }
-        
+
         [SupportedOSPlatform("Windows")]
         private void Back_Button_Click(object sender, EventArgs e)
         {
@@ -230,7 +230,7 @@ namespace MicroWin
         {
             isoPickerOFD.ShowDialog(this);
         }
-        
+
         [SupportedOSPlatform("Windows")]
         private void isoPickerOFD_FileOk(object sender, System.ComponentModel.CancelEventArgs e)
         {
@@ -242,7 +242,8 @@ namespace MicroWin
         {
             if (InvokeRequired)
             {
-                Invoke(new Action(() => {
+                Invoke(new Action(() =>
+                {
                     lblExtractionStatus.Text = $"Status: {status}";
                     isoExtractionPB.Value = progress;
                 }));
@@ -312,14 +313,16 @@ namespace MicroWin
                 ButtonPanel.Enabled = false;
                 WindowHelper.DisableCloseCapability(Handle);
 
-                await Task.Run(() => {
+                await Task.Run(() =>
+                {
                     var iso = new IsoManager();
                     InvokeIsoExtractionUIUpdate("Mounting ISO...", 5);
 
                     char? drive = iso.MountAndGetDrive(AppState.IsoPath);
                     if (drive != '\0')
                     {
-                        iso.ExtractIso(drive?.ToString(), AppState.MountPath, (p) => {
+                        iso.ExtractIso(drive?.ToString(), AppState.MountPath, (p) =>
+                        {
                             // Update the bar based on the 0-100 value from IsoManager
                             InvokeIsoExtractionUIUpdate($"Extracting: {p}%", p);
                         });
@@ -389,7 +392,7 @@ namespace MicroWin
         {
             AppState.DriverExportMode = (DriverExportMode)DriverExportCombo.SelectedIndex;
         }
-        
+
         [SupportedOSPlatform("Windows")]
         private void ReportToolCB_CheckedChanged(object sender, EventArgs e)
         {
@@ -413,13 +416,13 @@ namespace MicroWin
                     if (resetBar) pbCurrent.Value = 0;
                 }));
             }
-            else 
-            { 
+            else
+            {
                 lblCurrentStatus.Text = text;
-                if (resetBar) pbCurrent.Value = 0; 
+                if (resetBar) pbCurrent.Value = 0;
             }
         }
-        
+
         [SupportedOSPlatform("Windows")]
         private void UpdateCurrentProgressBar(int value)
         {
@@ -434,7 +437,7 @@ namespace MicroWin
             if (InvokeRequired) Invoke(new Action(() => { lblOverallStatus.Text = text; }));
             else { lblOverallStatus.Text = text; }
         }
-        
+
         [SupportedOSPlatform("Windows")]
         private void UpdateOverallProgressBar(int value)
         {
@@ -442,7 +445,7 @@ namespace MicroWin
             if (InvokeRequired) Invoke(new Action(() => pbOverall.Value = safeValue));
             else pbOverall.Value = safeValue;
         }
-        
+
         [SupportedOSPlatform("Windows")]
         private void WriteLogMessage(string message)
         {
@@ -456,7 +459,7 @@ namespace MicroWin
                 logTB.AppendText(fullMsg);
             }
         }
-        
+
         [SupportedOSPlatform("Windows")]
         private async void RunDeployment()
         {
@@ -475,13 +478,17 @@ namespace MicroWin
             WindowHelper.DisableCloseCapability(Handle);
             BusyCannotClose = true;
 
-            await Task.Run(async () => {
+            await Task.Run(async () =>
+            {
                 string mwTempFilePath = $"{Environment.GetEnvironmentVariable("SYSTEMDRIVE")}\\MicroWin";
                 string bootDriverPath = $"{mwTempFilePath}\\BootDrivers";
                 string allDriversPath = $"{mwTempFilePath}\\AllDrivers";
 
                 string installwimPath = Path.Combine(AppState.MountPath, "sources", "install.wim");
                 if (!File.Exists(installwimPath)) installwimPath = Path.Combine(AppState.MountPath, "sources", "install.esd");
+
+                WriteLogMessage($"MountPath: {AppState.MountPath}");
+                UpdateCurrentStatus($"MountPath: {AppState.MountPath}");
 
                 UpdateOverallStatus("Customizing install image...");
                 UpdateOverallProgressBar(0);
@@ -510,45 +517,112 @@ namespace MicroWin
                 }
 
                 UpdateOverallProgressBar(10);
-                new OsFeatureDisabler().RunTask((p) => UpdateCurrentProgressBar(p), (msg) => UpdateCurrentStatus(msg, false), (msg) => WriteLogMessage(msg));
+
+                if (AppState.RunOsFeatureDisabler)
+                    new OsFeatureDisabler().RunTask((p) => UpdateCurrentProgressBar(p), (msg) => UpdateCurrentStatus(msg, false), (msg) => WriteLogMessage(msg));
+                else
+                {
+                    WriteLogMessage("Skipping OsFeatureDisabler, disabled.");
+                    DynaLog.logMessage($"Skipping OsFeatureDisabler, disabled.");
+                }
+
                 UpdateOverallProgressBar(20);
-                new OsPackageRemover().RunTask((p) => UpdateCurrentProgressBar(p), (msg) => UpdateCurrentStatus(msg, false), (msg) => WriteLogMessage(msg));
+
+                if (AppState.RunOsPackageRemover)
+                    new OsPackageRemover().RunTask((p) => UpdateCurrentProgressBar(p), (msg) => UpdateCurrentStatus(msg, false), (msg) => WriteLogMessage(msg));
+                else
+                {
+                    WriteLogMessage("Skipping OsPackageRemover, disabled.");
+                    DynaLog.logMessage($"Skipping OsPackageRemover, disabled.");
+                }
+
+                UpdateOverallProgressBar(25);
+
+                if (AppState.RunOsCapabilityRemover)
+                    new OsCapabilityRemover().RunTask((p) => UpdateCurrentProgressBar(p), (msg) => UpdateCurrentStatus(msg, false), (msg) => WriteLogMessage(msg));
+                else
+                {
+                    WriteLogMessage("Skipping OsCapabilityRemover, disabled.");
+                    DynaLog.logMessage($"Skipping OsCapabilityRemover, disabled.");
+                }
+
                 UpdateOverallProgressBar(30);
-                new StoreAppRemover().RunTask((p) => UpdateCurrentProgressBar(p), (msg) => UpdateCurrentStatus(msg, false), (msg) => WriteLogMessage(msg));
+
+                if (AppState.RunStoreAppRemover)
+                    new StoreAppRemover().RunTask((p) => UpdateCurrentProgressBar(p), (msg) => UpdateCurrentStatus(msg, false), (msg) => WriteLogMessage(msg));
+                else
+                {
+                    WriteLogMessage("Skipping StoreAppRemover, disabled.");
+                    DynaLog.logMessage($"Skipping StoreAppRemover, disabled.");
+                }
 
                 UpdateOverallProgressBar(40);
-                WriteLogMessage("Loading image registry hives...");
-                RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "SOFTWARE"), "zSOFTWARE");
-                RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "SYSTEM"), "zSYSTEM");
-                RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "default"), "zDEFAULT");
-                RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Users", "Default", "ntuser.dat"), "zNTUSER");
+
+                if (AppState.RunRegistryModifications)
+                {
+                    WriteLogMessage("Loading image registry hives...");
+                    RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "SOFTWARE"), "zSOFTWARE");
+                    RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "SYSTEM"), "zSYSTEM");
+                    RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "default"), "zDEFAULT");
+                    RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Users", "Default", "ntuser.dat"), "zNTUSER");
+                }
+                else
+                {
+                    WriteLogMessage("Skipping registry modification, disabled.");
+                    DynaLog.logMessage($"Skipping registry modification, disabled.");
+                }
 
                 UpdateCurrentStatus("Modifying install image...");
                 if (AppState.AddReportingToolShortcut)
                 {
-                    WriteLogMessage("Downloading and integrating reporting tool...");
-                    using (var client = new HttpClient())
+                    string appPath = AppContext.BaseDirectory;
+                    string sourceFilePath = Path.Combine(appPath, "Tools", "ReportingTool.ps1");
+                    string targetFilePath = Path.Combine(AppState.ScratchPath, "ReportingTool.ps1");
+
+                    try
                     {
-                        var data = await client.GetByteArrayAsync("https://raw.githubusercontent.com/CodingWonders/MyScripts/refs/heads/main/MicroWinHelperTools/ReportingTool/ReportingTool.ps1");
-                        File.WriteAllBytes(Path.Combine(AppState.ScratchPath, "ReportingTool.ps1"), data);
+                        if (File.Exists(sourceFilePath))
+                        {
+                            File.Copy(sourceFileName: sourceFilePath, destFileName: targetFilePath, overwrite: true);
+                        }
+                        else
+                        {
+                            WriteLogMessage("Downloading and integrating reporting tool...");
+                            using (var client = new HttpClient())
+                            {
+                                var data = await client.GetByteArrayAsync("https://raw.githubusercontent.com/CodingWonders/MyScripts/refs/heads/main/MicroWinHelperTools/ReportingTool/ReportingTool.ps1");
+                                File.WriteAllBytes(targetFilePath, data);
+                            }
+
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show(ex.Message);
                     }
 
-                    RegistryHelper.AddRegistryItem("HKLM\\zSOFTWARE\\MicroWin");
-                    RegistryHelper.AddRegistryItem("HKLM\\zSOFTWARE\\MicroWin", new RegistryItem("MicroWinVersion", ValueKind.REG_SZ, $"{AppState.Version}"));
-                    RegistryHelper.AddRegistryItem("HKLM\\zSOFTWARE\\MicroWin", new RegistryItem("MicroWinBuildDate", ValueKind.REG_SZ, $"{DateTime.Now}"));
+                    if (AppState.RunRegistryModifications)
+                    {
+                        RegistryHelper.AddRegistryItem("HKLM\\zSOFTWARE\\MicroWin");
+                        RegistryHelper.AddRegistryItem("HKLM\\zSOFTWARE\\MicroWin", new RegistryItem("MicroWinVersion", ValueKind.REG_SZ, $"{AppState.Version}"));
+                        RegistryHelper.AddRegistryItem("HKLM\\zSOFTWARE\\MicroWin", new RegistryItem("MicroWinBuildDate", ValueKind.REG_SZ, $"{DateTime.Now}"));
+                    }
 
                 }
                 UpdateCurrentProgressBar(10);
 
-                WriteLogMessage("Disabling WPBT...");
-                RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\ControlSet001\\Control\\Session Manager", new RegistryItem("DisableWpbtExecution", ValueKind.REG_DWORD, 1));
+                if (AppState.RunRegistryModifications)
+                {
+                    WriteLogMessage("Disabling WPBT...");
+                    RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\ControlSet001\\Control\\Session Manager", new RegistryItem("DisableWpbtExecution", ValueKind.REG_DWORD, 1));
 
-                // Skip first logon animation
-                WriteLogMessage("Disabling FLA...");
-                RegistryHelper.AddRegistryItem("HKLM\\zSOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", new RegistryItem("EnableFirstLogonAnimation", ValueKind.REG_DWORD, 0));
+                    // Skip first logon animation
+                    WriteLogMessage("Disabling FLA...");
+                    RegistryHelper.AddRegistryItem("HKLM\\zSOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", new RegistryItem("EnableFirstLogonAnimation", ValueKind.REG_DWORD, 0));
 
-                WriteLogMessage("Setting execution policies...");
-                RegistryHelper.AddRegistryItem("HKLM\\zSOFTWARE\\Microsoft\\PowerShell\\1\\ShellIds\\Microsoft.PowerShell", new RegistryItem("ExecutionPolicy", ValueKind.REG_SZ, "RemoteSigned"));
+                    WriteLogMessage("Setting execution policies...");
+                    RegistryHelper.AddRegistryItem("HKLM\\zSOFTWARE\\Microsoft\\PowerShell\\1\\ShellIds\\Microsoft.PowerShell", new RegistryItem("ExecutionPolicy", ValueKind.REG_SZ, "RemoteSigned"));
+                }
 
                 if (VersionComparer.IsBetweenVersionRange(installImageInfo?.ProductVersion, VersionComparer.VERCONST_WIN11_24H2, VersionComparer.VERCONST_WIN11_25H2))
                 {
@@ -567,7 +641,7 @@ namespace MicroWin
                              * 3. DONE!!!
                              */
 
-                            Process.Start(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "system32", "takeown.exe"), 
+                            Process.Start(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "system32", "takeown.exe"),
                                 $"/F \"{fileExpManifestPath}\" /A").WaitForExit();
 
                             // since groups in Windows are localized, we need to grab the name of the Administrators group based on its SID
@@ -599,22 +673,43 @@ namespace MicroWin
                 }
 
                 UpdateCurrentProgressBar(50);
-                using (var client = new HttpClient())
+
+                try
                 {
-                    try
+
+                    string sourceFilePath = Path.Combine(AppState.AppPath, "Tools", "FirstStartup.ps1");
+                    string targetFilePath = Path.Combine(AppState.ScratchPath, "Windows", "FirstStartup.ps1");
+                    if (File.Exists(sourceFilePath))
                     {
-                        var data = client.GetByteArrayAsync("https://github.com/CodingWonders/MicroWin/raw/main/MicroWin/tools/FirstStartup.ps1").GetAwaiter().GetResult();
-                        File.WriteAllBytes(Path.Combine(AppState.ScratchPath, "Windows", "FirstStartup.ps1"), data);
+                        File.Copy(sourceFileName: sourceFilePath, destFileName: targetFilePath, overwrite: true);
                     }
-                    catch { }
+                    else
+                    {
+                        using (var client = new HttpClient())
+                        {
+                            try
+                            {
+                                var data = client.GetByteArrayAsync("https://github.com/CodingWonders/MicroWin/raw/main/MicroWin/tools/FirstStartup.ps1").GetAwaiter().GetResult();
+                                File.WriteAllBytes(targetFilePath, data);
+                            }
+                            catch { }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
                 }
 
                 UpdateCurrentProgressBar(90);
-                WriteLogMessage("Unloading image registry hives...");
-                RegistryHelper.UnloadRegistryHive("zSYSTEM");
-                RegistryHelper.UnloadRegistryHive("zSOFTWARE");
-                RegistryHelper.UnloadRegistryHive("zDEFAULT");
-                RegistryHelper.UnloadRegistryHive("zNTUSER");
+                if (AppState.RunRegistryModifications)
+                {
+                    WriteLogMessage("Unloading image registry hives...");
+                    RegistryHelper.UnloadRegistryHive("zSYSTEM");
+                    RegistryHelper.UnloadRegistryHive("zSOFTWARE");
+                    RegistryHelper.UnloadRegistryHive("zDEFAULT");
+                    RegistryHelper.UnloadRegistryHive("zNTUSER");
+                }
                 UpdateCurrentProgressBar(100);
 
                 UpdateCurrentStatus("Unmounting install image...");
@@ -644,51 +739,55 @@ namespace MicroWin
                 UpdateCurrentStatus("Mounting boot image...");
                 DismManager.MountImage(bootwimPath, 2, AppState.ScratchPath, (p) => UpdateCurrentProgressBar(p), (msg) => WriteLogMessage(msg));
 
-                UpdateCurrentStatus("Modifying WinPE registry...");
-                WriteLogMessage("Loading image registry hives...");
-                RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "SOFTWARE"), "zSOFTWARE");
-                RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "SYSTEM"), "zSYSTEM");
-                RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "default"), "zDEFAULT");
-                RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Users", "Default", "ntuser.dat"), "zNTUSER");
-
-                UpdateCurrentProgressBar(50);
-                WriteLogMessage("Bypassing requirements...");
-                RegistryHelper.AddRegistryItem("HKLM\\zDEFAULT\\Control Panel\\UnsupportedHardwareNotificationCache", new RegistryItem("SV1", ValueKind.REG_DWORD, 0));
-                RegistryHelper.AddRegistryItem("HKLM\\zDEFAULT\\Control Panel\\UnsupportedHardwareNotificationCache", new RegistryItem("SV2", ValueKind.REG_DWORD, 0));
-                RegistryHelper.AddRegistryItem("HKLM\\zNTUSER\\Control Panel\\UnsupportedHardwareNotificationCache", new RegistryItem("SV1", ValueKind.REG_DWORD, 0));
-                RegistryHelper.AddRegistryItem("HKLM\\zNTUSER\\Control Panel\\UnsupportedHardwareNotificationCache", new RegistryItem("SV2", ValueKind.REG_DWORD, 0));
-                RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\LabConfig", new RegistryItem("BypassCPUCheck", ValueKind.REG_DWORD, 1));
-                RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\LabConfig", new RegistryItem("BypassRAMCheck", ValueKind.REG_DWORD, 1));
-                RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\LabConfig", new RegistryItem("BypassSecureBootCheck", ValueKind.REG_DWORD, 1));
-                RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\LabConfig", new RegistryItem("BypassStorageCheck", ValueKind.REG_DWORD, 1));
-                RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\LabConfig", new RegistryItem("BypassTPMCheck", ValueKind.REG_DWORD, 1));
-                RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\MoSetup", new RegistryItem("AllowUpgradesWithUnsupportedTPMOrCPU", ValueKind.REG_DWORD, 1));
-                RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\Status\\ChildCompletion", new RegistryItem("setup.exe", ValueKind.REG_DWORD, 3));
-
-                // Old Setup should only be imposed on 24H2 and later (builds 26040 and later). Get this information
-                bool shouldUsePanther = false;
-
-                DismImageInfoCollection? bootImageInfo = DismManager.GetImageInformation(bootwimPath);
-                if (bootImageInfo is not null)
+                if (AppState.RunRegistryModifications)
                 {
-                    // Get the second index then get version
-                    DismImageInfo? setupImage = bootImageInfo.ElementAtOrDefault(1);
-                    shouldUsePanther = VersionComparer.IsNewerThanVersion(setupImage?.ProductVersion, new(10, 0, 26040, 0));
-                }
+                    UpdateCurrentStatus("Modifying WinPE registry...");
+                    WriteLogMessage("Loading image registry hives...");
+                    RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "SOFTWARE"), "zSOFTWARE");
+                    RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "SYSTEM"), "zSYSTEM");
+                    RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Windows", "System32", "config", "default"), "zDEFAULT");
+                    RegistryHelper.LoadRegistryHive(Path.Combine(AppState.ScratchPath, "Users", "Default", "ntuser.dat"), "zNTUSER");
 
-                if (shouldUsePanther)
-                {
-                    UpdateCurrentProgressBar(75);
-                    WriteLogMessage("Imposing old Setup...");
-                    RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup", new RegistryItem("CmdLine", ValueKind.REG_SZ, "\\sources\\setup.exe"));
-                }
+                    UpdateCurrentProgressBar(50);
 
-                UpdateCurrentProgressBar(95);
-                WriteLogMessage("Unloading image registry hives...");
-                RegistryHelper.UnloadRegistryHive("zSYSTEM");
-                RegistryHelper.UnloadRegistryHive("zSOFTWARE");
-                RegistryHelper.UnloadRegistryHive("zDEFAULT");
-                RegistryHelper.UnloadRegistryHive("zNTUSER");
+                    WriteLogMessage("Bypassing requirements...");
+                    RegistryHelper.AddRegistryItem("HKLM\\zDEFAULT\\Control Panel\\UnsupportedHardwareNotificationCache", new RegistryItem("SV1", ValueKind.REG_DWORD, 0));
+                    RegistryHelper.AddRegistryItem("HKLM\\zDEFAULT\\Control Panel\\UnsupportedHardwareNotificationCache", new RegistryItem("SV2", ValueKind.REG_DWORD, 0));
+                    RegistryHelper.AddRegistryItem("HKLM\\zNTUSER\\Control Panel\\UnsupportedHardwareNotificationCache", new RegistryItem("SV1", ValueKind.REG_DWORD, 0));
+                    RegistryHelper.AddRegistryItem("HKLM\\zNTUSER\\Control Panel\\UnsupportedHardwareNotificationCache", new RegistryItem("SV2", ValueKind.REG_DWORD, 0));
+                    RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\LabConfig", new RegistryItem("BypassCPUCheck", ValueKind.REG_DWORD, 1));
+                    RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\LabConfig", new RegistryItem("BypassRAMCheck", ValueKind.REG_DWORD, 1));
+                    RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\LabConfig", new RegistryItem("BypassSecureBootCheck", ValueKind.REG_DWORD, 1));
+                    RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\LabConfig", new RegistryItem("BypassStorageCheck", ValueKind.REG_DWORD, 1));
+                    RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\LabConfig", new RegistryItem("BypassTPMCheck", ValueKind.REG_DWORD, 1));
+                    RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\MoSetup", new RegistryItem("AllowUpgradesWithUnsupportedTPMOrCPU", ValueKind.REG_DWORD, 1));
+                    RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup\\Status\\ChildCompletion", new RegistryItem("setup.exe", ValueKind.REG_DWORD, 3));
+
+                    // Old Setup should only be imposed on 24H2 and later (builds 26040 and later). Get this information
+                    bool shouldUsePanther = false;
+
+                    DismImageInfoCollection? bootImageInfo = DismManager.GetImageInformation(bootwimPath);
+                    if (bootImageInfo is not null)
+                    {
+                        // Get the second index then get version
+                        DismImageInfo? setupImage = bootImageInfo.ElementAtOrDefault(1);
+                        shouldUsePanther = VersionComparer.IsNewerThanVersion(setupImage?.ProductVersion, new(10, 0, 26040, 0));
+                    }
+
+                    if (shouldUsePanther)
+                    {
+                        UpdateCurrentProgressBar(75);
+                        WriteLogMessage("Imposing old Setup...");
+                        RegistryHelper.AddRegistryItem("HKLM\\zSYSTEM\\Setup", new RegistryItem("CmdLine", ValueKind.REG_SZ, "\\sources\\setup.exe"));
+                    }
+
+                    UpdateCurrentProgressBar(95);
+                    WriteLogMessage("Unloading image registry hives...");
+                    RegistryHelper.UnloadRegistryHive("zSYSTEM");
+                    RegistryHelper.UnloadRegistryHive("zSOFTWARE");
+                    RegistryHelper.UnloadRegistryHive("zDEFAULT");
+                    RegistryHelper.UnloadRegistryHive("zNTUSER");
+                }
 
                 if (Directory.Exists(bootDriverPath))
                     DriverInstallHelper.InstallDrivers(AppState.ScratchPath, bootDriverPath);
@@ -785,5 +884,36 @@ namespace MicroWin
                 return;
             }
         }
+
+        [SupportedOSPlatform("Windows")]
+        private void cbRunOsFeatureDisabler_CheckedChanged(object sender, EventArgs e)
+        {
+            AppState.RunOsFeatureDisabler = cbRunOsFeatureDisabler.Checked;
+        }
+
+        [SupportedOSPlatform("Windows")]
+        private void cbRunOsPackageRemover_CheckedChanged(object sender, EventArgs e)
+        {
+            AppState.RunOsPackageRemover = cbRunOsPackageRemover.Checked;
+        }
+
+        [SupportedOSPlatform("Windows")]
+        private void cbRunOsCapabilityRemover_CheckedChanged(object sender, EventArgs e)
+        {
+            AppState.RunOsCapabilityRemover = cbRunOsCapabilityRemover.Checked;
+        }
+
+        [SupportedOSPlatform("Windows")]
+        private void cbRunStoreAppRemover_CheckedChanged(object sender, EventArgs e)
+        {
+            AppState.RunStoreAppRemover = cbRunStoreAppRemover.Checked;
+        }
+
+        [SupportedOSPlatform("Windows")]
+        private void cbRunRegistryModifications_CheckedChanged(object sender, EventArgs e)
+        {
+            AppState.RunRegistryModifications = cbRunRegistryModifications.Checked;
+        }
+
     }
 }

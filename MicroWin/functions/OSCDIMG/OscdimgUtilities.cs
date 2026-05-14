@@ -37,6 +37,24 @@ namespace MicroWin.OSCDIMG
 
             if (!File.Exists(oscdimgPath))
             {
+                try
+                {
+                    string appPath = AppContext.BaseDirectory;
+                    string sourceFilePath = Path.Combine(appPath, "Tools", "oscdimg.exe");
+                    string targetFilePath = oscdimgPath;
+                    if (File.Exists(sourceFilePath))
+                    {
+                        File.Copy(sourceFileName: sourceFilePath, destFileName: targetFilePath, overwrite: true);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
+            }
+
+            if (!File.Exists(oscdimgPath))
+            {
                 using (var client = new HttpClient())
                 {
                     var data = client.GetByteArrayAsync("https://github.com/CodingWonders/MicroWin/raw/main/MicroWin/tools/oscdimg.exe").GetAwaiter().GetResult();

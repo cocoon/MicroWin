@@ -54,6 +54,11 @@
             label14 = new Label();
             label15 = new Label();
             IsoSettingsPage = new Panel();
+            cbRunOsCapabilityRemover = new CheckBox();
+            cbRunRegistryModifications = new CheckBox();
+            cbRunStoreAppRemover = new CheckBox();
+            cbRunOsPackageRemover = new CheckBox();
+            cbRunOsFeatureDisabler = new CheckBox();
             DriverExportCombo = new ComboBox();
             label13 = new Label();
             UnattendCopyCB = new CheckBox();
@@ -410,6 +415,11 @@
             // 
             // IsoSettingsPage
             // 
+            IsoSettingsPage.Controls.Add(cbRunOsCapabilityRemover);
+            IsoSettingsPage.Controls.Add(cbRunRegistryModifications);
+            IsoSettingsPage.Controls.Add(cbRunStoreAppRemover);
+            IsoSettingsPage.Controls.Add(cbRunOsPackageRemover);
+            IsoSettingsPage.Controls.Add(cbRunOsFeatureDisabler);
             IsoSettingsPage.Controls.Add(DriverExportCombo);
             IsoSettingsPage.Controls.Add(label13);
             IsoSettingsPage.Controls.Add(UnattendCopyCB);
@@ -421,6 +431,71 @@
             IsoSettingsPage.Name = "IsoSettingsPage";
             IsoSettingsPage.Size = new Size(1008, 521);
             IsoSettingsPage.TabIndex = 6;
+            // 
+            // cbRunOsCapabilityRemover
+            // 
+            cbRunOsCapabilityRemover.AutoSize = true;
+            cbRunOsCapabilityRemover.Checked = true;
+            cbRunOsCapabilityRemover.CheckState = CheckState.Checked;
+            cbRunOsCapabilityRemover.Location = new Point(79, 283);
+            cbRunOsCapabilityRemover.Name = "cbRunOsCapabilityRemover";
+            cbRunOsCapabilityRemover.Size = new Size(155, 19);
+            cbRunOsCapabilityRemover.TabIndex = 14;
+            cbRunOsCapabilityRemover.Text = "Run OsPackageRemover";
+            cbRunOsCapabilityRemover.UseVisualStyleBackColor = true;
+            cbRunOsCapabilityRemover.CheckedChanged += cbRunOsCapabilityRemover_CheckedChanged;
+            // 
+            // cbRunRegistryModifications
+            // 
+            cbRunRegistryModifications.AutoSize = true;
+            cbRunRegistryModifications.Checked = true;
+            cbRunRegistryModifications.CheckState = CheckState.Checked;
+            cbRunRegistryModifications.Location = new Point(79, 332);
+            cbRunRegistryModifications.Name = "cbRunRegistryModifications";
+            cbRunRegistryModifications.Size = new Size(165, 19);
+            cbRunRegistryModifications.TabIndex = 13;
+            cbRunRegistryModifications.Text = "Run RegistryModifications";
+            cbRunRegistryModifications.UseVisualStyleBackColor = true;
+            cbRunRegistryModifications.CheckedChanged += cbRunRegistryModifications_CheckedChanged;
+            // 
+            // cbRunStoreAppRemover
+            // 
+            cbRunStoreAppRemover.AutoSize = true;
+            cbRunStoreAppRemover.Checked = true;
+            cbRunStoreAppRemover.CheckState = CheckState.Checked;
+            cbRunStoreAppRemover.Location = new Point(80, 307);
+            cbRunStoreAppRemover.Name = "cbRunStoreAppRemover";
+            cbRunStoreAppRemover.Size = new Size(146, 19);
+            cbRunStoreAppRemover.TabIndex = 12;
+            cbRunStoreAppRemover.Text = "Run StoreAppRemover";
+            cbRunStoreAppRemover.UseVisualStyleBackColor = true;
+            cbRunStoreAppRemover.CheckedChanged += cbRunStoreAppRemover_CheckedChanged;
+            // 
+            // cbRunOsPackageRemover
+            // 
+            cbRunOsPackageRemover.AutoSize = true;
+            cbRunOsPackageRemover.Checked = true;
+            cbRunOsPackageRemover.CheckState = CheckState.Checked;
+            cbRunOsPackageRemover.Location = new Point(80, 261);
+            cbRunOsPackageRemover.Name = "cbRunOsPackageRemover";
+            cbRunOsPackageRemover.Size = new Size(155, 19);
+            cbRunOsPackageRemover.TabIndex = 11;
+            cbRunOsPackageRemover.Text = "Run OsPackageRemover";
+            cbRunOsPackageRemover.UseVisualStyleBackColor = true;
+            cbRunOsPackageRemover.CheckedChanged += cbRunOsPackageRemover_CheckedChanged;
+            // 
+            // cbRunOsFeatureDisabler
+            // 
+            cbRunOsFeatureDisabler.AutoSize = true;
+            cbRunOsFeatureDisabler.Checked = true;
+            cbRunOsFeatureDisabler.CheckState = CheckState.Checked;
+            cbRunOsFeatureDisabler.Location = new Point(80, 235);
+            cbRunOsFeatureDisabler.Name = "cbRunOsFeatureDisabler";
+            cbRunOsFeatureDisabler.Size = new Size(145, 19);
+            cbRunOsFeatureDisabler.TabIndex = 10;
+            cbRunOsFeatureDisabler.Text = "Run OsFeatureDisabler";
+            cbRunOsFeatureDisabler.UseVisualStyleBackColor = true;
+            cbRunOsFeatureDisabler.CheckedChanged += cbRunOsFeatureDisabler_CheckedChanged;
             // 
             // DriverExportCombo
             // 
@@ -1095,5 +1170,10 @@
         private System.Windows.Forms.Panel panel4;
         private System.Windows.Forms.LinkLabel lnkUseNtLite;
         private System.Windows.Forms.LinkLabel lnkUseDT;
+        private CheckBox cbRunOsFeatureDisabler;
+        private CheckBox cbRunOsPackageRemover;
+        private CheckBox cbRunStoreAppRemover;
+        private CheckBox cbRunRegistryModifications;
+        private CheckBox cbRunOsCapabilityRemover;
     }
 }

@@ -7,6 +7,8 @@ namespace MicroWin
 
     public static class AppState
     {
+        public static string AppPath => AppContext.BaseDirectory;
+
         public static string? IsoPath { get; set; }
         public static string TempRoot => Path.Combine(Path.GetTempPath(), "microwin");
         public static string MountPath => $"{Path.Combine(TempRoot, "mount")}";
@@ -23,5 +25,12 @@ namespace MicroWin
         public static string? SaveISO { get; set; }
 
         public static string Version => "v1.99.2";
+
+        public static bool RunOsFeatureDisabler { get; set; } = true;
+        public static bool RunOsPackageRemover { get; set; } = true;
+        public static bool RunOsCapabilityRemover { get; set; } = true;
+        public static bool RunStoreAppRemover { get; set; } = true;
+        public static bool RunRegistryModifications { get; set; } = true;
+
     }
 }
