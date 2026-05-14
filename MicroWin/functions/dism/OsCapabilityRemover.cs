@@ -42,10 +42,10 @@ namespace MicroWin.functions.dism
 
         public override void RunTask(Action<int> pbReporter, Action<string> curOpReporter, Action<string> logWriter)
         {
-            RemoveUnwantedPackages(pbReporter, curOpReporter, logWriter);
+            RemoveUnwantedCapabilities(pbReporter, curOpReporter, logWriter);
         }
 
-        private void RemoveUnwantedPackages(Action<int> pbReporter, Action<string> curOpReporter, Action<string> logWriter)
+        private void RemoveUnwantedCapabilities(Action<int> pbReporter, Action<string> curOpReporter, Action<string> logWriter)
         {
             curOpReporter.Invoke("Getting image capabilities...");
 
@@ -79,7 +79,7 @@ namespace MicroWin.functions.dism
                     DynaLog.logMessage($"ERROR: failed to load exluces from file:{Environment.NewLine}{ex.ToString()}");
                 }
 
-                curOpReporter.Invoke("Filtering image packages...");
+                curOpReporter.Invoke("Filtering image capabilities...");
                 IEnumerable<string> capabilitesToRemove = allCapabilities.Select(cap => cap.Name).Where(cap =>
                     !excludedItems.Any(entry => cap.IndexOf(entry, StringComparison.OrdinalIgnoreCase) >= 0));
 
@@ -91,19 +91,19 @@ namespace MicroWin.functions.dism
                 int idx = 0;
                 foreach (string capabilityToRemove in capabilitesToRemove)
                 {
-                    curOpReporter.Invoke($"Removing package {capabilityToRemove}...");
+                    curOpReporter.Invoke($"Removing capability {capabilityToRemove}...");
                     pbReporter.Invoke((int)(((double)idx / capabilitesToRemove.ToList().Count) * 100));
                     // we have this because the API throws an exception on removal error
                     try
                     {
                         DismApi.RemoveCapability(session, capabilityToRemove);
-                        logWriter.Invoke($"OK: Package {capabilityToRemove} could be removed as capability.");
+                        logWriter.Invoke($"OK: capability {capabilityToRemove} could be removed as capability.");
                         DynaLog.logMessage($"OK: capability {capabilityToRemove} removed.");
                     }
                     catch (Exception ex)
                     {
-                        logWriter.Invoke($"Package {capabilityToRemove} could not be removed as capability: {ex.Message}");
-                        DynaLog.logMessage($"ERROR: Failed to remove as capability: {capabilityToRemove}: {ex.Message}");
+                        logWriter.Invoke($"Capability {capabilityToRemove} could not be removed: {ex.Message}");
+                        DynaLog.logMessage($"ERROR: Failed to remove capability: {capabilityToRemove}: {ex.Message}");
                     }
                     idx++;
                 }

@@ -439,9 +439,9 @@
             cbRunOsCapabilityRemover.CheckState = CheckState.Checked;
             cbRunOsCapabilityRemover.Location = new Point(79, 283);
             cbRunOsCapabilityRemover.Name = "cbRunOsCapabilityRemover";
-            cbRunOsCapabilityRemover.Size = new Size(155, 19);
+            cbRunOsCapabilityRemover.Size = new Size(164, 19);
             cbRunOsCapabilityRemover.TabIndex = 14;
-            cbRunOsCapabilityRemover.Text = "Run OsPackageRemover";
+            cbRunOsCapabilityRemover.Text = "Run OsCapabilityRemover";
             cbRunOsCapabilityRemover.UseVisualStyleBackColor = true;
             cbRunOsCapabilityRemover.CheckedChanged += cbRunOsCapabilityRemover_CheckedChanged;
             // 
